@@ -1,286 +1,314 @@
 # Origen.ai Simulation Scheduling System
 
-A Python-based backend service for managing simulations, machines, and convergence data with real-time monitoring capabilities.
+A FastAPI-based backend service for managing simulations, machines, and convergence data with real-time monitoring capabilities.
 
-## 🚀 Features
+## What This Application Does
 
-- **Simulation Management**: Create, list, update, and delete simulations
-- **Machine Management**: Manage available computing resources
-- **Convergence Monitoring**: Real-time convergence graph data streaming
-- **WebSocket Support**: Live updates for convergence data
-- **Database Operations**: Mix of ORM and bare SQL operations
-- **Comprehensive Testing**: Unit tests with pytest
-- **Auto-generated API Docs**: FastAPI OpenAPI documentation
+This is a simulation management system that allows you to:
+- Create and manage simulation jobs
+- Track available computing machines
+- Monitor simulation convergence data in real-time
+- Stream live updates via WebSocket connections
 
-## 🛠 Tech Stack
+## Prerequisites
 
-- **Framework**: FastAPI (async support)
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Migrations**: Alembic
-- **Validation**: Pydantic
-- **Testing**: pytest
-- **Containerization**: Docker + Docker Compose
-- **Real-time**: WebSockets
+Before you start, make sure you have:
+- **Docker** and **Docker Compose** installed on your system
+- **Python 3.11+** (only needed for local development)
 
-## 📋 Prerequisites
+## Quick Start with Docker (Recommended)
 
-- Docker and Docker Compose
-- Python 3.11+ (for local development)
+### Step 1: Start the Application
 
-## 🚀 Quick Start
+Open your terminal and navigate to the project directory:
 
-### Using Docker (Recommended)
-
-1. **Clone and navigate to the project**:
-   ```bash
-   cd "origen new"
-   ```
-
-2. **Start the services**:
-   ```bash
-   docker-compose up --build
-   ```
-
-3. **Access the API**:
-   - API Documentation: http://localhost:8000/docs
-   - Alternative Docs: http://localhost:8000/redoc
-   - Health Check: http://localhost:8000/health
-
-### Local Development
-
-1. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Set up PostgreSQL database**:
-   ```bash
-   # Start PostgreSQL (adjust connection details as needed)
-   createdb origen_simulations
-   ```
-
-3. **Set environment variable**:
-   ```bash
-   export DATABASE_URL="postgresql://postgres:password@localhost:5432/origen_simulations"
-   ```
-
-4. **Run the application**:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-## 🏗 Architecture
-
-### Project Structure
-
-```
-app/
-├── main.py                 # FastAPI application entry point
-├── models/                 # SQLAlchemy database models
-│   ├── machine.py
-│   ├── simulation.py
-│   └── convergence_data.py
-├── schemas/                # Pydantic request/response schemas
-│   ├── machine.py
-│   ├── simulation.py
-│   └── convergence_data.py
-├── routes/                 # API route handlers
-│   ├── simulations.py
-│   ├── machines.py
-│   ├── convergence.py
-│   └── websocket.py
-├── services/               # Business logic layer
-│   ├── simulation_service.py
-│   ├── machine_service.py
-│   └── convergence_service.py
-└── db/                     # Database configuration
-    ├── database.py
-    └── seed_data.py
+```bash
+cd "origen new"
 ```
 
-### Database Schema
+Start all services (database + application):
 
-#### Machines Table
-- `id` (PK): Primary key
-- `name`: Machine identifier
-- `cpu`: CPU specification
-- `gpu`: GPU specification
-- `memory`: Memory in GB
-- `status`: Current status (available, busy, maintenance)
+```bash
+docker-compose up --build
+```
 
-#### Simulations Table
-- `id` (PK): Primary key
-- `name`: Simulation name
-- `status`: Simulation status (pending, running, finished)
-- `machine_id` (FK): Reference to machines table
-- `created_at`: Creation timestamp
-- `updated_at`: Last update timestamp
+This will:
+- Download PostgreSQL database image
+- Build the Python application
+- Start both services
+- Create database tables automatically
+- Seed initial machine data
 
-#### Convergence Data Table
-- `id` (PK): Primary key
-- `simulation_id` (FK): Reference to simulations table
-- `timestamp`: Data point timestamp
-- `loss_value`: Loss value at this point
+### Step 2: Verify It's Working
 
-## 🔌 API Endpoints
+Once the containers are running, open your browser and check:
 
-### Simulations
+1. **API Documentation**: http://localhost:8000/docs
+2. **Health Check**: http://localhost:8000/health
+3. **Root Endpoint**: http://localhost:8000/
 
-- `GET /simulations/` - List simulations with filtering and ordering
-- `POST /simulations/` - Create new simulation
-- `GET /simulations/{id}` - Get simulation details
-- `GET /simulations/{id}/detailed` - Get simulation with machine details (bare SQL)
-- `PUT /simulations/{id}` - Update simulation
-- `DELETE /simulations/{id}` - Delete simulation
-- `POST /simulations/{id}/create-bare-sql` - Create simulation using bare SQL
+You should see:
+- The Swagger UI documentation page
+- A health check response: `{"status": "healthy"}`
+- A welcome message at the root endpoint
 
-### Machines
+### Step 3: Test the API
 
-- `GET /machines/` - List all machines
-- `GET /machines/{id}` - Get machine details
-- `POST /machines/` - Create new machine
-- `PATCH /machines/{id}/status` - Update machine status
+You can test the API using the interactive documentation at http://localhost:8000/docs, or use curl:
 
-### Convergence Data
+```bash
+# Check if the API is responding
+curl http://localhost:8000/health
 
-- `POST /convergence/data` - Add convergence data point
-- `GET /convergence/{simulation_id}/graph` - Get convergence graph data
-- `GET /convergence/{simulation_id}/stream` - Stream convergence data
-- `GET /convergence/{simulation_id}/data` - Get all convergence data
-- `POST /convergence/{simulation_id}/add-bare-sql` - Add data using bare SQL
+# List all machines
+curl http://localhost:8000/machines/
 
-### WebSocket
+# List all simulations
+curl http://localhost:8000/simulations/
+```
 
-- `WS /ws/convergence/{simulation_id}` - Real-time convergence updates
+## Running Without Docker (Local Development)
 
-## 🔧 Bare SQL Operations
+If you prefer to run the application locally without Docker:
 
-The system includes both ORM and bare SQL operations as requested:
+### Step 1: Install Dependencies
 
-### Write Operations (Bare SQL)
-- **Simulation Creation**: `create_simulation_bare_sql()` in `SimulationService`
-- **Convergence Data Addition**: `add_convergence_data_bare_sql()` in `ConvergenceService`
+```bash
+pip install -r requirements.txt
+```
 
-### Read Operations (Bare SQL)
-- **Simulation with Machine Details**: `get_simulation_with_machine()` in `SimulationService`
-- **Convergence Graph Data**: `get_convergence_graph_data()` in `ConvergenceService`
+### Step 2: Set Up PostgreSQL Database
 
-These operations are clearly marked in the code with comments and are accessible via dedicated API endpoints.
+You need a PostgreSQL database running locally. You can:
 
-## 🧪 Testing
+**Option A: Use Docker for just the database**
+```bash
+docker run --name postgres-db -e POSTGRES_DB=origen_simulations -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:15
+```
 
-Run the test suite:
+**Option B: Install PostgreSQL locally**
+- Install PostgreSQL on your system
+- Create a database named `origen_simulations`
+- Make sure it's running on port 5432
+
+### Step 3: Set Environment Variable
+
+```bash
+export DATABASE_URL="postgresql://postgres:password@localhost:5432/origen_simulations"
+```
+
+### Step 4: Run the Application
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The application will start on http://localhost:8000
+
+## How to Check If It's Working
+
+### 1. Basic Health Check
+
+First, make sure the application is running:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected response:
+```json
+{"status": "healthy"}
+```
+
+### 2. Check API Documentation
+
+Open your browser and go to: http://localhost:8000/docs
+
+You should see the Swagger UI with all available endpoints.
+
+### 3. Test Core Functionality
+
+**Test Machine Management:**
+```bash
+# List all machines
+curl http://localhost:8000/machines/
+
+# Create a new machine
+curl -X POST http://localhost:8000/machines/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test-machine", "cpu": "Intel i7", "gpu": "RTX 3080", "memory": 32, "status": "available"}'
+```
+
+**Test Simulation Management:**
+```bash
+# List all simulations
+curl http://localhost:8000/simulations/
+
+# Create a new simulation
+curl -X POST http://localhost:8000/simulations/ \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test-simulation", "machine_id": 1}'
+```
+
+**Test Convergence Data:**
+```bash
+# Add convergence data
+curl -X POST http://localhost:8000/convergence/data \
+  -H "Content-Type: application/json" \
+  -d '{"simulation_id": 1, "loss_value": 0.5}'
+
+# Get convergence graph data
+curl http://localhost:8000/convergence/1/graph
+```
+
+### 4. Test WebSocket Connection
+
+You can test the WebSocket connection using a simple HTML file or a WebSocket client:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <div id="messages"></div>
+    <script>
+        const ws = new WebSocket('ws://localhost:8000/ws/convergence/1');
+        const messages = document.getElementById('messages');
+        
+        ws.onopen = function(event) {
+            messages.innerHTML += '<p>Connected to WebSocket</p>';
+        };
+        
+        ws.onmessage = function(event) {
+            messages.innerHTML += '<p>Received: ' + event.data + '</p>';
+        };
+        
+        ws.onerror = function(error) {
+            messages.innerHTML += '<p>Error: ' + error + '</p>';
+        };
+    </script>
+</body>
+</html>
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**1. Port Already in Use**
+```bash
+# Check what's using port 8000
+lsof -i :8000
+
+# Kill the process if needed
+kill -9 <PID>
+```
+
+**2. Database Connection Issues**
+```bash
+# Check if PostgreSQL container is running
+docker ps
+
+# Check database logs
+docker-compose logs db
+```
+
+**3. Application Won't Start**
+```bash
+# Check application logs
+docker-compose logs app
+
+# Rebuild containers
+docker-compose down
+docker-compose up --build
+```
+
+**4. Permission Issues (Linux/Mac)**
+```bash
+# Fix file permissions
+sudo chown -R $USER:$USER .
+```
+
+### Docker Commands Reference
+
+```bash
+# Start services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs
+
+# View logs for specific service
+docker-compose logs app
+docker-compose logs db
+
+# Rebuild and start
+docker-compose up --build
+
+# Remove everything (including volumes)
+docker-compose down -v
+```
+
+## Running Tests
+
+To make sure everything is working correctly, run the test suite:
 
 ```bash
 # Using Docker
 docker-compose exec app pytest
 
-# Local development
+# Or run tests locally (if you have Python installed)
 pytest
 ```
 
-### Test Coverage
+## Project Structure
 
-- Unit tests for all API endpoints
-- Database operation testing
-- WebSocket functionality testing
-- Error handling validation
-
-## 📊 Database Migrations
-
-The project uses Alembic for database migrations:
-
-```bash
-# Create a new migration
-alembic revision --autogenerate -m "Description"
-
-# Apply migrations
-alembic upgrade head
-
-# Rollback migration
-alembic downgrade -1
+```
+app/
+├── main.py                 # FastAPI application entry point
+├── models/                 # Database models
+├── schemas/                # Request/response schemas
+├── routes/                 # API endpoints
+├── services/               # Business logic
+└── db/                     # Database configuration
 ```
 
-## 🔄 Real-time Features
+## API Endpoints Overview
 
-### WebSocket Integration
+- **Health Check**: `GET /health`
+- **Machines**: `GET /machines/`, `POST /machines/`
+- **Simulations**: `GET /simulations/`, `POST /simulations/`
+- **Convergence Data**: `POST /convergence/data`, `GET /convergence/{id}/graph`
+- **WebSocket**: `WS /ws/convergence/{simulation_id}`
 
-The system provides real-time convergence data updates via WebSocket:
+For detailed API documentation, visit: http://localhost:8000/docs
 
-```javascript
-// Example WebSocket client
-const ws = new WebSocket('ws://localhost:8000/ws/convergence/1');
+## Production Deployment
 
-ws.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    console.log('New convergence data:', data);
-};
-```
+For production deployment, consider:
 
-### Streaming Endpoints
+1. **Environment Variables**: Set proper database credentials
+2. **CORS Settings**: Configure allowed origins
+3. **SSL/HTTPS**: Use proper certificates
+4. **Database Security**: Use strong passwords and network security
+5. **Monitoring**: Add logging and health monitoring
+6. **Scaling**: Use load balancers for multiple instances
 
-- **Convergence Stream**: Get incremental updates since last timestamp
-- **WebSocket**: Real-time bidirectional communication
-- **Graph Data**: Complete convergence graph with completion status
+## Need Help?
 
-## 🐳 Docker Configuration
+If you encounter issues:
 
-### Services
-
-- **app**: FastAPI application (port 8000)
-- **db**: PostgreSQL database (port 5432)
-
-### Environment Variables
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `POSTGRES_DB`: Database name
-- `POSTGRES_USER`: Database user
-- `POSTGRES_PASSWORD`: Database password
-
-## 📈 Performance Considerations
-
-- **Async Support**: FastAPI provides async request handling
-- **Connection Pooling**: SQLAlchemy connection management
-- **Efficient Queries**: Optimized database queries with proper indexing
-- **Real-time Updates**: WebSocket for live data streaming
-
-## 🔒 Security Notes
-
-- CORS is configured for development (configure appropriately for production)
-- Input validation via Pydantic schemas
-- SQL injection protection through parameterized queries
-- Database connection security through environment variables
-
-## 🚀 Deployment
-
-### Production Considerations
-
-1. **Environment Variables**: Set production database URL
-2. **CORS Configuration**: Update allowed origins
-3. **Database Security**: Use strong passwords and SSL
-4. **Monitoring**: Add logging and monitoring
-5. **Scaling**: Consider horizontal scaling for high load
-
-### Health Checks
-
-- `GET /health` - Application health status
-- Database connectivity validation
-- Service dependency checks
-
-## 📝 API Documentation
-
-Interactive API documentation is available at:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run the test suite
-6. Submit a pull request
+1. Check the logs: `docker-compose logs`
+2. Verify all services are running: `docker ps`
+3. Test the health endpoint: `curl http://localhost:8000/health`
+4. Check the API documentation: http://localhost:8000/docs
 
 
