@@ -283,10 +283,4 @@ Interactive API documentation is available at:
 5. Run the test suite
 6. Submit a pull request
 
-## 📄 License
 
-This project is part of the Origen.ai simulation scheduling system.
-
----
-
-**Note**: This backend service is designed to handle simulation scheduling with real-time monitoring capabilities. The system supports both traditional REST API calls and WebSocket connections for live updates, making it suitable for interactive simulation monitoring and management.
